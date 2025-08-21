@@ -2,6 +2,7 @@ import axios from "axios";
 import React, { useContext, useState } from "react";
 import { UserContext } from "../context/UserContext";
 import { useNavigate } from "react-router-dom";
+import { useMutation } from "@tanstack/react-query";
 
 const Login = () => {
   const [userDetails, setUserDetails] = useState({
@@ -34,10 +35,43 @@ const Login = () => {
     }
   };
 
+  const loginMutation = useMutation({
+    mutationFn: () => axios.post(`${API_BASE_URL}/auth/login`, userDetails),
+    onSuccess: (data) => {
+      console.log(data);
+      alert("Login successful!");
+      // window.location.href = "/";
+    },
+    onError: (error) => {
+      console.log(error);
+      alert(error.response?.data?.message);
+    },
+    onSettled: () => {
+      console.log("This will run regardless");
+    },
+  });
+  const { data, mutate, isPending } = useMutation({
+    mutationFn: (loginCredientials) =>
+      axios.post(`${API_BASE_URL}/auth/login`, loginCredientials),
+    onSuccess: (data) => {
+      console.log(data);
+    },
+    onError: (err) => {
+      console.log(err);
+    },
+  });
+
+  const login = (e) => {
+    e.preventDefault();
+    console.log(userDetails);
+    // loginMutation.mutate();
+    mutate(userDetails);
+  };
+
   return (
     <div>
       <h2>Login to Continue</h2>
-      <form onSubmit={handleLogin}>
+      <form onSubmit={login}>
         <div>
           <label>username</label>
           <input
@@ -57,7 +91,9 @@ const Login = () => {
             value={userDetails.password}
           />
         </div>
-        <button>Login</button>
+        <button disabled={loginMutation.isPending}>
+          {loginMutation.isPending ? "Logging in..." : "Login"}
+        </button>
       </form>
     </div>
   );
